@@ -1,5 +1,4 @@
 /*
- *
  * @autor Andre Spielvogel, FabianFranz, Stephen Zailer
  */
 
@@ -788,7 +787,7 @@ void showCapacitorTerminal(float value){
 	Serial.println("Kondensator: --||--");
 	Serial.print("Wert:");
 	Serial.print(value);
-	Serial.print(" µF");
+	Serial.println(" µF");
 }
 void showResistorTerminal(float value){
 	/*
@@ -804,7 +803,7 @@ void showResistorTerminal(float value){
 	Serial.println("--");
 	Serial.print("Wert:");
 	Serial.print(value);
-	Serial.print(" Ω");
+	Serial.println(" Ω");
 }
 void showLastMeasurements(float *values, uint8_t length, uint8_t count){
 	/*
@@ -918,7 +917,7 @@ uint8_t getMeasureRepeats() {
 	Serial.println(MAXREPEATS);
 	input = getInt();
 	if(input > MAXREPEATS || input < 1) {
-		Serial.println ("---------------Überprüfe deine Eingabe---------------");
+		Serial.println("---------------Überprüfe deine Eingabe---------------");
 		input = getMeasureRepeats();
 	}
 	return input;
