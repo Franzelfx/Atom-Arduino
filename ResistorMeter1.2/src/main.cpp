@@ -146,23 +146,11 @@ void setup(){
 
 }
 void loop(){
-	// Voreinstellungen
-	Serial.begin(9600);
-	setParts();
-	bootDevice();
-	if(!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR)) {
-		Serial.println("[ERROR]: SSD1306 Oled- Display nicht erkannt");
-	}
-	display.setTextSize(1); // 6 Pixel
-	display.clearDisplay();
-
 // Variablen für Werteverarbeitung
 	float currentValue = 0;
 	float previousValue = 0;
 	uint8_t measureRepeats = 1;  // Eine Messwiederholung als Standard
 	uint8_t processingmode = 1;  // Einfache Messung als Standard
-	boolean showMenue = false;
-	uint8_t component = false;
 	int8_t polarity = -1;
 	float originalValues[MAXREPEATS];
 	float copyValues[MAXREPEATS];
@@ -175,6 +163,26 @@ void loop(){
 // Hilfsvariablen
 	uint8_t countR = 0;
 	uint8_t countC = 0;
+	boolean showMenue = false;
+	uint8_t component = false;
+	boolean displayConnected = false;
+
+	// Voreinstellungen
+	Serial.begin(9600);
+	setParts();
+	bootDevice();
+	if(!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR)) {
+		Serial.println("[ERROR]: SSD1306 Oled- Display nicht erkannt");
+		displayConnected = false;
+	}else{
+		display.setTextSize(1); // 6 Pixel
+		display.setTextColor(WHITE);
+		display.clearDisplay();
+		display.setCursor(1, 1);
+		display.print("Bauteilemesser");
+		display.display();
+		displayConnected = true;
+	}
 
 	/*
 	 * Main Loop des Messgerätes:
@@ -261,11 +269,11 @@ void loop(){
 				case 1:
 					if(currentValue != previousValue) { // Prüfen ob Wert sich geändert hat
 						if(component == 1) { // Ausgabe je nach Bauteil
-							// showResistorScreen(currentValue);
+							if(displayConnected) showResistorScreen(currentValue);
 							showResistorTerminal(currentValue);
 						}
 						if(component == 2) {
-							// showCapacitorScreen(currentValue);
+							if(displayConnected) showCapacitorScreen(currentValue);
 							showCapacitorTerminal(currentValue);
 						}
 						previousValue = currentValue;
@@ -274,11 +282,11 @@ void loop(){
 				case 2:
 					currentAverage = average(originalValues, measureRepeats);
 					if(component == 1) { // Ausgabe je nach Bauteil
-						// showResistorScreen(currentAverage);
+						if(displayConnected) showResistorScreen(currentAverage);
 						showResistorTerminal(currentAverage);
 					}
 					if(component == 2) {
-						// showCapacitorScreen(currentAverage);
+						if(displayConnected) showCapacitorScreen(currentAverage);
 						showCapacitorTerminal(currentAverage);
 					}
 					break;
@@ -286,11 +294,11 @@ void loop(){
 					copyArrays(originalValues, measureRepeats, copyValues, measureRepeats);
 					currentMedian = median(copyValues, measureRepeats);
 					if(component == 1) { // Ausgabe je nach Bauteil
-						// showResistorScreen(currentMedian);
+						if(displayConnected) showResistorScreen(currentMedian);
 						showResistorTerminal(currentMedian);
 					}
 					if(component == 2) {
-						// showCapacitorScreen(currentMedian);
+						if(displayConnected) showCapacitorScreen(currentMedian);
 						showCapacitorTerminal(currentMedian);
 					}
 					break;
@@ -626,7 +634,6 @@ float median(float *values, uint8_t length){
 	 * => Länge des Array an Messwerten
 	 */
 	float median = 0;
-	float semiMedian = 0;
 	uint8_t mid = 0;
 
 	sort(values, length);
@@ -635,8 +642,7 @@ float median(float *values, uint8_t length){
 		mid = (length / 2) - 1;
 		median = values[mid];
 	}else {
-		semiMedian = values[mid] + values[mid - 1];
-		median = semiMedian / 2;
+		median = (values[mid] + values[mid - 1]);
 	}
 	return median;
 }
