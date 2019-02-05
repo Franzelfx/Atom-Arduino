@@ -49,7 +49,7 @@
  #define WRONGPOLARITY 0
  #define RIGHTPOLARITY 1
 // #define OPENCONNECTION 42900.00
- #define OLED_ADDR   0x3C
+ #define OLED_ADDR 0x3C
  #define SCREEN_WIDTH 128
  #define SCREEN_HEIGHT 64
  #define OLED_RESET -1
@@ -631,7 +631,7 @@ float median(float *values, uint8_t length){
 
 	sort(values, length);
 	if(length == 1) return values[0];
-	if(length % 2 != 0) {
+	if(length % 2 != 0) {  // wenn Rest => Mitte existiert
 		mid = (length / 2) - 1;
 		median = values[mid];
 	}else {
@@ -973,8 +973,8 @@ void setParts(){
 	pinMode(M_PIN2, INPUT);
 	analogReference(V_REF);
   #ifdef NANO
-	pinMode(A4, OUTPUT);
-	pinMode(A5, OUTPUT);
+	// pinMode(A4, OUTPUT);
+	// pinMode(A5, OUTPUT);
   #endif
 }
 boolean buttonPressed(){
