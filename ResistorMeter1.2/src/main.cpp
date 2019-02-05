@@ -161,14 +161,16 @@ void loop(){
 	float previousValue = 0;
 	uint8_t measureRepeats = 1;  // Eine Messwiederholung als Standard
 	uint8_t processingmode = 1;  // Einfache Messung als Standard
-	uint8_t showMenue = 0;
-	uint8_t component = 0;
+	boolean showMenue = false;
+	uint8_t component = false;
 	int8_t polarity = -1;
 	float originalValues[MAXREPEATS];
 	float copyValues[MAXREPEATS];
 	float currentMedian = 0;
 	float currentAverage = 0;
 	float stdDeviation = 0;
+	for(int i=0; i<MAXREPEATS; i++) originalValues[i] = 0;
+	for(int i=0; i<MAXREPEATS; i++) copyValues[i] = 0;
 
 // Hilfsvariablen
 	uint8_t countR = 0;
@@ -184,8 +186,8 @@ void loop(){
 	 */
 
 	while(true) {
-		if(buttonPressed()) showMenue++;
-		if(showMenue % 2) {  // wenn Taster gedrückt zeige Hauptmenü
+		if(buttonPressed()) showMenue = true;
+		if(showMenue) {  // wenn Taster gedrückt zeige Hauptmenü
 			switch(mainMenu()) {
 			case PROCESSINGMODE: processingmode = getProcessingMode(); break;
 			case MEASUREREPEATS: measureRepeats = getMeasureRepeats(); break;
@@ -197,7 +199,7 @@ void loop(){
 					Serial.println(stdDeviation);
 				}
 				break;
-			case EXITMENU: showMenue++; break;
+			case EXITMENU: showMenue = false; break;
 			default: Serial.println("[ERROR]: Menüfehler"); break;
 			}
 
@@ -223,21 +225,22 @@ void loop(){
 				break;
 			case 2:
 				while(countC < measureRepeats) {
-					if(buttonPressed()) {  // Rückkehr ins Menü
-						showMenue++;
+					if(buttonPressed()) {  // Springe aus Abfrage wenn Knopf gedrückt
+						showMenue = true;
 						break;
 					}
-					currentValue = getCapacitorValue(TAU_1);         // hole Kondensatorwert
-					if(currentValue == -1) break;         // Bei Messfehler Springe zum Anfang
+					currentValue = getCapacitorValue(TAU_1); // hole Kondensatorwert
+					if(currentValue == -1) break; // Bei Messfehler Springe zum Anfang
 					if(currentValue > 0.0) {
-						originalValues[countC] = currentValue;         // schreibe Kondensatorwerte in Array
+						originalValues[countC] = currentValue; // schreibe Kondensatorwerte in Array
 						// Serial.println(currentValue);
 						countC++;
 					}
 				} countC = 0;
+				if(showMenue) break;  // Springe zum Menü
 				do {
-					if(buttonPressed()) { // Rückkehr ins Menü
-						showMenue++;
+					if(buttonPressed()) {  // Springe aus Abfrage wenn Knopf gedrückt
+						showMenue = true;
 						break;
 					}
 					polarity = getPolarity();
@@ -246,52 +249,54 @@ void loop(){
 				break;
 			default: Serial.println("[ERROR]: Bauteileerkennungsfehler"); break;
 			}
-		}
 
-		/*
-		 * Auswertung der aufgeneommenen Messwerte
-		 * => 1 = Keine Auswertung, lediglich Anzeige des letzen Messwertes
-		 * => 2 = Ausgabe des Durchschnittswertes
-		 * => 3 = Ausgabe des Medianwertes
-		 */
-		switch(processingmode) {
-		case 1:
-			if(currentValue != previousValue) { // Prüfen ob Wert sich geändert hat
-				if(component == 1) { // Ausgabe je nach Bauteil
-					// showResistorScreen(currentValue);
-					showResistorTerminal(currentValue);
+			/*
+			 * Auswertung der aufgeneommenen Messwerte
+			 * => 1 = Keine Auswertung, lediglich Anzeige des letzen Messwertes
+			 * => 2 = Ausgabe des Durchschnittswertes
+			 * => 3 = Ausgabe des Medianwertes
+			 */
+			if(!showMenue) {  // gehe nur in die Ausgabe falls nicht das Menü gezeigt werden soll
+				switch(processingmode) {
+				case 1:
+					if(currentValue != previousValue) { // Prüfen ob Wert sich geändert hat
+						if(component == 1) { // Ausgabe je nach Bauteil
+							// showResistorScreen(currentValue);
+							showResistorTerminal(currentValue);
+						}
+						if(component == 2) {
+							// showCapacitorScreen(currentValue);
+							showCapacitorTerminal(currentValue);
+						}
+						previousValue = currentValue;
+					}
+					break;
+				case 2:
+					currentAverage = average(originalValues, measureRepeats);
+					if(component == 1) { // Ausgabe je nach Bauteil
+						// showResistorScreen(currentAverage);
+						showResistorTerminal(currentAverage);
+					}
+					if(component == 2) {
+						// showCapacitorScreen(currentAverage);
+						showCapacitorTerminal(currentAverage);
+					}
+					break;
+				case 3:
+					copyArrays(originalValues, measureRepeats, copyValues, measureRepeats);
+					currentMedian = median(copyValues, measureRepeats);
+					if(component == 1) { // Ausgabe je nach Bauteil
+						// showResistorScreen(currentMedian);
+						showResistorTerminal(currentMedian);
+					}
+					if(component == 2) {
+						// showCapacitorScreen(currentMedian);
+						showCapacitorTerminal(currentMedian);
+					}
+					break;
+				default: Serial.println("[ERROR]: Ausgabefehler"); break;
 				}
-				if(component == 2) {
-					// showCapacitorScreen(currentValue);
-					showCapacitorTerminal(currentValue);
-				}
-				previousValue = currentValue;
 			}
-			break;
-		case 2:
-			currentAverage = average(originalValues, measureRepeats);
-			if(component == 1) {         // Ausgabe je nach Bauteil
-				// showResistorScreen(currentAverage);
-				showResistorTerminal(currentAverage);
-			}
-			if(component == 2) {
-				// showCapacitorScreen(currentAverage);
-				showCapacitorTerminal(currentAverage);
-			}
-			break;
-		case 3:
-			copyArrays(originalValues, measureRepeats, copyValues, measureRepeats);
-			currentMedian = median(copyValues, measureRepeats);
-			if(component == 1) {         // Ausgabe je nach Bauteil
-				// showResistorScreen(currentMedian);
-				showResistorTerminal(currentMedian);
-			}
-			if(component == 2) {
-				// showCapacitorScreen(currentMedian);
-				showCapacitorTerminal(currentMedian);
-			}
-			break;
-		default: Serial.println("[ERROR]: Ausgabefehler"); break;
 		}
 	}
 }
