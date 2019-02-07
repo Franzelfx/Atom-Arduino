@@ -7,6 +7,7 @@
  #include <SPI.h>
  #include <Adafruit_GFX.h>
  #include <Adafruit_SSD1306.h>
+ #include <EEPROM.h>
 /*
  * Betrieb mit Arduino UNO in Verbindung mit
  * dem Shield "Mikroprzessortechnik 2018"
@@ -69,6 +70,8 @@
  #define DEBUG true
  #define DEBUGTRASHHOLD 5
  #define MAXREPEATS 10
+ #define PM_ADDR 0
+ #define MR_ADDR 1
 
 /*
  * Funktionen für die Werteermittlung:
@@ -149,15 +152,17 @@ void loop(){
 // Variablen für Werteverarbeitung
 	float currentValue = 0;
 	float previousValue = 0;
-	uint8_t measureRepeats = 1;  // Eine Messwiederholung als Standard
-	uint8_t processingmode = 1;  // Einfache Messung als Standard
+	uint8_t processingmode = 1; // Einfache Messung als Standard
+	processingmode = EEPROM.read(PM_ADDR); // hole Wert aus EEPROM Adresse 0
+	uint8_t measureRepeats = 1; // Eine Messwiederholung als Standard
+	measureRepeats = EEPROM.read(MR_ADDR); // hole Wert aus EEPROM Adresse 1
 	int8_t polarity = -1;
 	float originalValues[MAXREPEATS];
 	float copyValues[MAXREPEATS];
 	float currentMedian = 0;
 	float currentAverage = 0;
 	float stdDeviation = 0;
-	for(int i=0; i<MAXREPEATS; i++) originalValues[i] = 0;
+	for(int i=0; i<MAXREPEATS; i++) originalValues[i] = 0;  // hole ab Adresse 2
 	for(int i=0; i<MAXREPEATS; i++) copyValues[i] = 0;
 
 // Hilfsvariablen
@@ -197,8 +202,14 @@ void loop(){
 		if(buttonPressed()) showMenue = true;
 		if(showMenue && Serial.availableForWrite()) {  // wenn Taster gedrückt zeige Hauptmenü
 			switch(mainMenu()) {
-			case PROCESSINGMODE: processingmode = getProcessingMode(); break;
-			case MEASUREREPEATS: measureRepeats = getMeasureRepeats(); break;
+			case PROCESSINGMODE:
+				processingmode = getProcessingMode();  // schreibe Messmodus in EEPROM
+				EEPROM.write(PM_ADDR, processingmode);
+				break;
+			case MEASUREREPEATS:
+				measureRepeats = getMeasureRepeats();
+				EEPROM.write(MR_ADDR, measureRepeats);  // schreibe Messwiederholungen in EEPROM
+				break;
 			case SHOWMEASURES:
 				showLastMeasurements(originalValues, sizeof(originalValues) / sizeof(float), measureRepeats);
 				currentAverage = average(originalValues, measureRepeats);
@@ -211,13 +222,12 @@ void loop(){
 			case EXITMENU: showMenue = false; break;
 			default: Serial.println("[ERROR]: Menüfehler"); break;
 			}
-
+		}else{
 			/*
 			 * Messablauf für
 			 * => 1 = Wiederstand
 			 * => 2 = Kondensator
 			 */
-		}else{
 			component = getConnection();  // prüfe welches Bauteil angeschlossen ist
 			switch(component) {
 			case 0: break;
