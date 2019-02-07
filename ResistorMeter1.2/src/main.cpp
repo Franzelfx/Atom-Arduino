@@ -44,9 +44,9 @@
  #endif
  #define TAU_1 63
  #define TAU_5 99
- #define LOADSWITCH 10000
+ #define LOADSWITCH 1000000
  #define TRASHHOLD 200
- #define CLOCKLOAD 1000
+ #define CLOCKLOAD 100000
  #define WRONGPOLARITY 0
  #define RIGHTPOLARITY 1
 // #define OPENCONNECTION 42900.00
@@ -249,7 +249,7 @@ void loop(){
 						break;
 					}
 					currentValue = getCapacitorValue(TAU_1); // hole Kondensatorwert
-					if(currentValue == -1) break; // Bei Messfehler Springe zum Anfang
+					if(currentValue == -1) break; // Bei Messfehler Springe aus Abfrage
 					if(currentValue > 0.0) {
 						originalValues[countC] = currentValue; // schreibe Kondensatorwerte in Array
 						// Serial.println(currentValue);
@@ -388,7 +388,7 @@ boolean load(uint8_t polarity, uint8_t percent){
 }
 boolean loadSlow(uint8_t percent){
 	/*
-	 * Lädt einen Kondensator nach der Polung langsamer,
+	 * Lädt einen Kondensator langsamer,
 	 * Erforderliche Parameter:
 	 *  => richtige Polung = 1
 	 *  => false Polung = 0
@@ -476,13 +476,18 @@ uint32_t getSlowLoadDuration(uint8_t percent){
 
 	if(!mode) {
 		if(unload(RIGHTPOLARITY)) mode++; // wenn entladen
+		deltaT = -2;
 	} else {
 		if(mode == 1) {
 			previousMicros = micros();
+			deltaT = -2;
 			mode++;
 		}
 		if(loadSlow(percent)) {
 			deltaT = (micros() - previousMicros);
+			if(deltaT < TRASHHOLD) {
+				deltaT = -1;
+			}
 			mode = 0;
 		}
 	}
