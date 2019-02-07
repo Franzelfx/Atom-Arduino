@@ -195,7 +195,7 @@ void loop(){
 
 	while(true) {
 		if(buttonPressed()) showMenue = true;
-		if(showMenue) {  // wenn Taster gedrückt zeige Hauptmenü
+		if(showMenue && Serial.availableForWrite()) {  // wenn Taster gedrückt zeige Hauptmenü
 			switch(mainMenu()) {
 			case PROCESSINGMODE: processingmode = getProcessingMode(); break;
 			case MEASUREREPEATS: measureRepeats = getMeasureRepeats(); break;
@@ -852,6 +852,7 @@ uint8_t getInt() {
 	boolean newData = false;
 	while (!newData) {
 		newData = Marker(receivedChars);
+		if(buttonPressed()) return 4;
 	}
 	return atoi(receivedChars);
 }
