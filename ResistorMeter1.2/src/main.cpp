@@ -201,6 +201,7 @@ void loop(){
 			case MEASUREREPEATS: measureRepeats = getMeasureRepeats(); break;
 			case SHOWMEASURES:
 				showLastMeasurements(originalValues, sizeof(originalValues) / sizeof(float), measureRepeats);
+				currentAverage = average(originalValues, measureRepeats);
 				if(currentAverage) {
 					Serial.print("Standardabweichung: ");
 					stdDeviation = deviation(originalValues, measureRepeats, currentAverage);
@@ -639,10 +640,12 @@ float median(float *values, uint8_t length){
 	sort(values, length);
 	if(length == 1) return values[0];
 	if(length % 2 != 0) {  // wenn Rest => Mitte existiert
-		mid = (length / 2) - 1;
+		mid = (length / 2); // z.B.: Länge 9 => Hälfte = 4.5, Komma wird "weggeworfen" 4 besitz selben Abstand zu 0 wie zu 8
 		median = values[mid];
 	}else {
+		mid = length / 2;  // z.B.: Länge 10 => Hälfte = 5, Abstand zu 0 = 5, Abstand zu 9 = 4 => 1 subtrahieren
 		median = (values[mid] + values[mid - 1]);
+		median = median / 2;
 	}
 	return median;
 }
