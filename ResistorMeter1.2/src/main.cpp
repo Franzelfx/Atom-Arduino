@@ -733,7 +733,7 @@ void showResistorScreen(float value){
 		display.clearDisplay();
 		display.setTextColor(WHITE);
 		display.setCursor(BORDERSPACE,FONTSIZE);
-		display.print("Wiederstand");
+		display.print("Widerstand");
 		resistorCircuit((uint16_t)SCREEN_HEIGHT/2);
 		display.setCursor(BORDERSPACE,fontConst);
 		display.print("Wert: ");
@@ -862,8 +862,7 @@ uint8_t getInt() {
 	 * Rückgabeparameter:
 	 * => Eingegebene Zahl als 8-Bit Integer Datentyp (Vorzeichenunbehaftet)
 	 */
-	const uint8_t numChars = 4;
-	char *receivedChars = (char*)calloc(numChars, sizeof(char));
+	char receivedChars[4];
 	boolean newData = false;
 	while (!newData) {
 		newData = Marker(receivedChars);
