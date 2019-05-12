@@ -4,7 +4,7 @@
 // Gibt die Impulse pro Sekunde
 // des Spannungsignals an Pin 7 aus
 //-------------------------
-int pin = 7;
+int pin = 2;
 unsigned long N;          //Anzahl der Impulse
 unsigned long T;          //Zeitintervall in us
 unsigned long time;       //Startzeit
